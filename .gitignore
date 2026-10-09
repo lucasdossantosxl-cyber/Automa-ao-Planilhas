@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# Arquivos gerados pelos exemplos
+nota_teste.pdf
+relatorio_final.csv
