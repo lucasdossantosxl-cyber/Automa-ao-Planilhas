@@ -1,9 +1,12 @@
-import pandas as pd
+"""Cálculo do faturamento a partir de quantidade × preço de cada produto."""
 
-# 1. Carrega o arquivo CSV para a memória
-df = pd.read_csv("relatorio_final.csv")
-# 2. Soma todos os valores da coluna 'Vendas'
-total_vendas = df["Vendas"].sum()
+from decimal import Decimal
+from pathlib import Path
 
-# 3. Exibe o resultado formatado
-print(f"Total geral de vendas: {total_vendas}")
+from consolidar import ler_csv, validar_vendas
+
+
+def calcular_total(caminho: Path) -> Decimal:
+    """Recalcula os subtotais e confere a coluna Faturamento, quando presente."""
+    tabela = validar_vendas(ler_csv(Path(caminho)))
+    return sum(tabela["Faturamento"], start=Decimal("0.00"))
