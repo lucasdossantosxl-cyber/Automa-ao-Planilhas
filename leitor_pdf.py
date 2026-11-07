@@ -1,25 +1,44 @@
+"""Extração do valor monetário informado no relatório PDF."""
+
+import logging
+import re
+from decimal import Decimal
+from pathlib import Path
+
 from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 
-# 1. Carrega o PDF que acabamos de gerar
-reader = PdfReader("nota_teste.pdf")
+from dinheiro import converter_decimal
 
-# 2. Pega a primeira página (em Python, a contagem começa em 0)
-pagina = reader.pages[0]
+logger = logging.getLogger(__name__)
+PADRAO_VALOR = re.compile(r"\bValor:\s*R\$[^\S\r\n]*([^\r\n]*)", re.IGNORECASE)
 
-# 3. Extrai o texto contido nela
-texto = pagina.extract_text()
 
-if not texto:
-	raise ValueError("O PDF não contém texto extraível.")
+def extrair_valor(caminho: Path) -> Decimal:
+    """Lê todas as páginas e exige um valor monetário não ambíguo."""
+    try:
+        leitor = PdfReader(str(caminho))
+        texto = "\n".join(pagina.extract_text() or "" for pagina in leitor.pages)
+    except PdfReadError:
+        raise ValueError("Não foi possível ler o arquivo PDF.") from None
 
-marcador_valor = "Valor: "
-if marcador_valor not in texto:
-	raise ValueError(f'O campo "{marcador_valor.strip()}" não foi encontrado no PDF.')
+    if not texto.strip():
+        raise ValueError("O PDF não contém texto extraível.")
 
-valor_nota = texto.partition(marcador_valor)[2].splitlines()[0].strip()
+    encontrados = PADRAO_VALOR.findall(texto)
+    if not encontrados:
+        raise ValueError('O campo "Valor: R$" não foi encontrado no PDF.')
 
-# 3. Imprime apenas o valor extraído
-print(valor_nota)
+    try:
+        valores = {converter_decimal(valor) for valor in encontrados}
+    except (ValueError, TypeError):
+        raise ValueError(
+            "O campo Valor do PDF contém um valor monetário inválido."
+        ) from None
 
-# 4. Exibe o texto lido no terminal
-print(texto)
+    if len(valores) != 1:
+        raise ValueError("O PDF contém valores diferentes no campo Valor.")
+
+    valor = valores.pop()
+    logger.info("Valor extraído do PDF: %s", valor)
+    return valor

@@ -9,3 +9,8 @@ venv/
 # Arquivos gerados pelos exemplos
 nota_teste.pdf
 relatorio_final.csv
+saida/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/

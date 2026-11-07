@@ -1,3 +1,5 @@
-pandas
-pypdf
-reportlab
+pandas==2.3.3
+pypdf==7.0.0
+reportlab==5.1.0
+openpyxl==3.1.5
+python-dotenv==1.2.4
